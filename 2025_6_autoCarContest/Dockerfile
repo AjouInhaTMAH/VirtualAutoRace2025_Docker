@@ -121,8 +121,7 @@ EXPOSE 22
 RUN echo '#!/bin/bash\n\
 xset s off\n\
 xset -dpms\n\
-xset s noblank\n\
-startxfce4' > /usr/local/bin/start_gui.sh \
+xset s noblank\n' > /usr/local/bin/start_gui.sh \
     && chmod +x /usr/local/bin/start_gui.sh
 # ------------------------------------------------------------------------------------------------------------
 CMD ["/usr/bin/supervisord", "-n"]
