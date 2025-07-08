@@ -10,6 +10,7 @@ RUN apt update && apt install -y \
     build-essential \
     net-tools \
     git \
+    python3 \
     python3-pip \
     && locale-gen en_US en_US.UTF-8 \
     && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
@@ -57,7 +58,7 @@ RUN apt update && apt upgrade -y && \
 RUN pip3 install --no-cache-dir scikit-learn==0.24.1
 
 WORKDIR /root/catkin_ws
-
+# ------------------------------------------------------------------------------------------------------------
 # 필수 패키지 설치
 RUN apt update && apt install -y \
     curl wget sudo unzip git net-tools iputils-ping vim \
@@ -71,12 +72,13 @@ COPY MoraiLauncher_Lin /opt/MoraiLauncher_Lin
 
 # 작업 디렉토리 설정
 WORKDIR /opt/MoraiLauncher_Lin
-
+# ------------------------------------------------------------------------------------------------------------
 # 실행 권한 부여
 RUN chmod +x MORAISim.sh MoraiLauncher_Lin.x86_64
 
 RUN apt-get update && apt-get install -y \
-    x11vnc xvfb fluxbox novnc websockify wget python3 supervisor nano firefox \
+    xfce4 xfce4-terminal x11vnc xvfb novnc websockify wget \
+    supervisor nano firefox dbus-x11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # noVNC 설치
@@ -88,11 +90,39 @@ RUN wget https://github.com/novnc/noVNC/archive/refs/tags/v1.4.0.tar.gz -O /tmp/
 # supervisor 설정 복사
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# x11vnc 비밀번호 파일 생성
+RUN mkdir -p /root/.vnc && \
+    x11vnc -storepasswd smsm /root/.vnc/passwd
 
 WORKDIR /opt/noVNC
 
 EXPOSE 5900 6080
+# ------------------------------------------------------------------------------------------------------------
+# SSH 서버 설치 및 기본 설정
+RUN apt-get update && apt-get install -y openssh-server sudo \
+    && mkdir /var/run/sshd
 
-RUN echo "export DISPLAY=:0" >> /root/.bashrc
+# 일반 사용자 tester 생성 및 비밀번호 설정
+RUN useradd -m -s /bin/bash tester \
+    && echo 'tester:smsm' | chpasswd \
+    && usermod -aG sudo tester
 
+    # SSH 설정 변경: root 로그인 차단, 비밀번호 인증 허용
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
+    && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# 호스트 키 생성
+RUN ssh-keygen -A
+
+# SSH 데몬 실행 포트 노출
+EXPOSE 22
+
+# 화면 안꺼지게
+RUN echo '#!/bin/bash\n\
+xset s off\n\
+xset -dpms\n\
+xset s noblank\n\
+startxfce4' > /usr/local/bin/start_gui.sh \
+    && chmod +x /usr/local/bin/start_gui.sh
+# ------------------------------------------------------------------------------------------------------------
 CMD ["/usr/bin/supervisord", "-n"]
