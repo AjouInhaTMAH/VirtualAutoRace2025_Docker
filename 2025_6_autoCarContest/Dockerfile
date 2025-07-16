@@ -117,11 +117,5 @@ RUN ssh-keygen -A
 # SSH 데몬 실행 포트 노출
 EXPOSE 22
 
-# 화면 안꺼지게
-RUN echo '#!/bin/bash\n\
-xset s off\n\
-xset -dpms\n\
-xset s noblank\n' > /usr/local/bin/start_gui.sh \
-    && chmod +x /usr/local/bin/start_gui.sh
 # ------------------------------------------------------------------------------------------------------------
 CMD ["/usr/bin/supervisord", "-n"]
