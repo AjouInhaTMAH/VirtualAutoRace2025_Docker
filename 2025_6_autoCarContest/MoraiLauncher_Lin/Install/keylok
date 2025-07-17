@@ -1,3 +1,0 @@
-#!/bin/sh
-# script to change keylok USB dongle permissions
-chmod a+rw "$DEVICE"
