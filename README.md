@@ -13,6 +13,7 @@ build과 완료될 경우, 아래 코드를 실행하여 도커를 실행한다.
 ```
 docker run -d \
   --name ros_noetic_container \
+  --gpus all \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v /dev/dri:/dev/dri \
